@@ -9,6 +9,7 @@ namespace HealthBarHider
     {
         private bool sceneChanged = false;
         private string currentScene = "";
+
         public override void OnFixedUpdate()
         {
             if ((sceneChanged) && (currentScene != "") && (currentScene != "Loader"))
@@ -20,7 +21,7 @@ namespace HealthBarHider
                     localHealth.SetActive(false);
                     foreach (Player tempPlayer in playerManager.AllPlayers)
                     {
-                        if (tempPlayer != playerManager.localPlayer)
+                        if (tempPlayer.Controller != playerManager.localPlayer.Controller)
                         {
                             tempPlayer.Controller.gameObject.transform.GetChild(2).gameObject.SetActive(false);
                         }

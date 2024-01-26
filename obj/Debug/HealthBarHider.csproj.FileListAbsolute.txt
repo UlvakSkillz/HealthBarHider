@@ -117,7 +117,6 @@ C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\bin\Debug\PhotonVoice.
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\bin\Debug\RUMBLE.Platform.Info.dll
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\bin\Debug\com.rlabrecque.steamworks.net.dll
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\bin\Debug\MelonLoader.xml
-C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.csproj.AssemblyReference.cache
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.csproj.CoreCompileInputs.cache
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.csproj.CopyComplete
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.dll
