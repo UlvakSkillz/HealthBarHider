@@ -121,4 +121,3 @@ C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHid
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.csproj.CopyComplete
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.dll
 C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.pdb
-C:\Users\austi\source\repos\HealthBarHider\HealthBarHider\obj\Debug\HealthBarHider.csproj.AssemblyReference.cache

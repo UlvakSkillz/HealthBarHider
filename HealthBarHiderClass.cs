@@ -18,33 +18,44 @@ namespace HealthBarHider
         private bool hideOthers = false;
         private DateTime EnemyHealthHideTimer;
         private bool EnemyHealthHideTimerActive;
+        private DateTime healthTimer = DateTime.Now;
+        private bool healthTimerActive = false;
+        private GameObject localHealth;
+        private bool init = false;
 
         public override void OnFixedUpdate()
         {
-            //if timer active and elapsed
-            if ((EnemyHealthHideTimerActive) && (EnemyHealthHideTimer <= DateTime.Now))
+            //if enemy timer active and elapsed
+            if ((init) && (EnemyHealthHideTimerActive) && (EnemyHealthHideTimer <= DateTime.Now))
             {
                 EnemyHealthHideTimerActive = false;
                 hideEnemyHealths();
-                MelonLogger.Msg("Timer Ended - Set Players Health");
+            }
+            //if self timer active and elapsed
+            if ((init) && (healthTimerActive) && (healthTimer <= DateTime.Now))
+            {
+                localHealth = GameObject.Find("Health/Local/Player health bar");
+                //hide local health bar
+                localHealth.SetActive(false);
+                healthTimerActive = false;
             }
             //if scene changed to acceptable scene
-            if ((sceneChanged) && (currentScene != "") && (currentScene != "Loader"))
+            if ((!init) && (sceneChanged) && (currentScene != "") && (currentScene != "Loader"))
             {
                 //initialize
                 try
                 {
                     //get variables
                     playerManager = GameObject.Find("Game Instance/Initializable/PlayerManager").GetComponent<PlayerManager>();
-                    GameObject localHealth = GameObject.Find("Health/Local/Player health bar");
                     playerCount = 1;
                     //read file
                     readSettingsFile();
                     //if need to hide self
                     if (hideSelf)
                     {
-                        //hide local health bar
-                        localHealth.SetActive(false);
+                        //start timer
+                        healthTimer = DateTime.Now.AddSeconds(2f);
+                        healthTimerActive = true;
                     }
                     //if there's other players and need to hide others
                     if ((hideOthers) && (playerCount != playerManager.AllPlayers.Count))
@@ -54,6 +65,7 @@ namespace HealthBarHider
                         hideEnemyHealths();
                     }
                     sceneChanged = false;
+                    init = true;
                 }
                 catch { }
             }
@@ -67,7 +79,6 @@ namespace HealthBarHider
                     //start timer
                     EnemyHealthHideTimer = DateTime.Now.AddSeconds(2);
                     EnemyHealthHideTimerActive = true;
-                    MelonLogger.Msg("Timer Started");
                 }
             }
         }
@@ -77,6 +88,7 @@ namespace HealthBarHider
             //not messing with scene change stuff here to allow retrying initializing variables
             sceneChanged = true;
             currentScene = sceneName;
+            init = false;
         }
 
         //reads the file to see if it needs to hide self/other healths
@@ -107,9 +119,10 @@ namespace HealthBarHider
                         hideOthers = false;
                     }
                 }
-                catch
+                catch (Exception e)
                 {
                     //error catch
+                    MelonLogger.Error(e);
                     hideSelf = false;
                     hideOthers = false;
                 }
@@ -117,6 +130,7 @@ namespace HealthBarHider
             else
             {
                 //error catch
+                MelonLogger.Error("File not Found");
                 hideSelf = false;
                 hideOthers = false;
             }
