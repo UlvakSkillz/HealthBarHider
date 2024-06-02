@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using MelonLoader;
 using HealthBarHider; // The namespace of your mod class
 // ...
-[assembly: MelonInfo(typeof(HealthBarHiderClass), "Health Bar Hider", "1.0.7", "UlvakSkillz")]
+[assembly: MelonInfo(typeof(HealthBarHiderClass), "Health Bar Hider", "1.1.0", "UlvakSkillz")]
 [assembly: MelonGame("Buckethead Entertainment", "RUMBLE")]
 
 // General Information about an assembly is controlled through the following

@@ -2,6 +2,8 @@
 using RUMBLE.Managers;
 using RUMBLE.Players;
 using System;
+using System.Collections;
+using System.IO;
 using UnityEngine;
 
 namespace HealthBarHider
@@ -14,6 +16,8 @@ namespace HealthBarHider
         private string currentScene = "";
         private int playerCount = 1;
         private string settingsFile = @"UserData\HealthBarHider\Settings.txt";
+        private string FILEPATH = @"UserData\HealthBarHider";
+        private string FILENAME = @"Settings.txt";
         private bool hideSelf = false;
         private bool hideOthers = false;
         private DateTime EnemyHealthHideTimer;
@@ -22,6 +26,40 @@ namespace HealthBarHider
         private bool healthTimerActive = false;
         private GameObject localHealth;
         private bool init = false;
+        private bool newFile = false;
+
+        public override void OnLateInitializeMelon()
+        {
+            MelonCoroutines.Start(CheckIfFileExists(FILEPATH, FILENAME));
+        }
+
+
+        public IEnumerator CheckIfFileExists(string filePath, string fileName)
+        {
+            if (!File.Exists($"{filePath}\\{fileName}"))
+            {
+                if (!Directory.Exists(filePath))
+                {
+                    MelonLogger.Msg($"Folder Not Found, Creating Folder: {filePath}");
+                    Directory.CreateDirectory(filePath);
+                }
+                if (!File.Exists($"{filePath}\\{fileName}"))
+                {
+                    MelonLogger.Msg($"Creating File {filePath}\\{fileName}");
+                    File.Create($"{filePath}\\{fileName}");
+                }
+                newFile = true;
+                for (int i = 0; i < 60; i++) { yield return new WaitForFixedUpdate(); }
+                string[] newFileText = new string[4];
+                newFileText[0] = "Show On Self:";
+                newFileText[1] = "False";
+                newFileText[2] = "Show on Others:";
+                newFileText[3] = "True";
+                File.WriteAllLines($"{filePath}\\{fileName}", newFileText);
+            }
+            yield return null;
+        }
+
 
         public override void OnFixedUpdate()
         {
@@ -94,43 +132,40 @@ namespace HealthBarHider
         //reads the file to see if it needs to hide self/other healths
         private void readSettingsFile()
         {
-            if (System.IO.File.Exists(settingsFile))
+            if (newFile)
             {
-                try
+                hideSelf = true;
+                hideOthers = false;
+                newFile = false;
+                return;
+            }
+            try
+            {
+                //reads file lines
+                string[] fileContents = File.ReadAllLines(settingsFile);
+                //checks for hide self
+                if (fileContents[1].ToLower() == "true")
                 {
-                    //reads file lines
-                    string[] fileContents = System.IO.File.ReadAllLines(settingsFile);
-                    //checks for hide self
-                    if (fileContents[1].ToLower() == "true")
-                    {
-                        hideSelf = true;
-                    }
-                    else
-                    {
-                        hideSelf = false;
-                    }
-                    //checks for hide others
-                    if (fileContents[3].ToLower() == "true")
-                    {
-                        hideOthers = true;
-                    }
-                    else
-                    {
-                        hideOthers = false;
-                    }
+                    hideSelf = true;
                 }
-                catch (Exception e)
+                else
                 {
-                    //error catch
-                    MelonLogger.Error(e);
                     hideSelf = false;
+                }
+                //checks for hide others
+                if (fileContents[3].ToLower() == "true")
+                {
+                    hideOthers = true;
+                }
+                else
+                {
                     hideOthers = false;
                 }
             }
-            else
+            catch (Exception e)
             {
                 //error catch
-                MelonLogger.Error("File not Found");
+                MelonLogger.Error(e);
                 hideSelf = false;
                 hideOthers = false;
             }
