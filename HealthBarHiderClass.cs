@@ -1,10 +1,9 @@
 ﻿using MelonLoader;
-using RUMBLE.Managers;
-using RUMBLE.Players;
+using Il2CppRUMBLE.Managers;
+using Il2CppRUMBLE.Players;
 using System;
-using System.Collections;
-using System.IO;
 using UnityEngine;
+using RumbleModUI;
 
 namespace HealthBarHider
 {
@@ -13,11 +12,8 @@ namespace HealthBarHider
         //variables
         private PlayerManager playerManager;
         private bool sceneChanged = false;
-        private string currentScene = "";
+        private string currentScene = "Loader";
         private int playerCount = 1;
-        private string settingsFile = @"UserData\HealthBarHider\Settings.txt";
-        private string FILEPATH = @"UserData\HealthBarHider";
-        private string FILENAME = @"Settings.txt";
         private bool hideSelf = false;
         private bool hideOthers = false;
         private DateTime EnemyHealthHideTimer;
@@ -26,40 +22,36 @@ namespace HealthBarHider
         private bool healthTimerActive = false;
         private GameObject localHealth;
         private bool init = false;
-        private bool newFile = false;
+        UI UI = UI.instance;
+        private Mod HealthbarHider = new Mod();
 
         public override void OnLateInitializeMelon()
         {
-            MelonCoroutines.Start(CheckIfFileExists(FILEPATH, FILENAME));
+            HealthbarHider.ModName = "Health Bar Hider";
+            HealthbarHider.ModVersion = "2.0.1";
+            HealthbarHider.SetFolder("HealthbarHider");
+            HealthbarHider.AddDescription("Description", "Description", "Toggles Healthbars on Everyone", new Tags { IsSummary = true });
+            HealthbarHider.AddToList("Hide Self", true, 0, "Turns On/Off Self Health", new Tags { });
+            HealthbarHider.AddToList("Hide Others", false, 0, "Turns On/Off Others Health", new Tags { });
+            HealthbarHider.GetFromFile();
+            hideSelf = (bool)HealthbarHider.Settings[1].Value;
+            hideOthers = (bool)HealthbarHider.Settings[2].Value;
+            HealthbarHider.ModSaved += Save;
+            UI.instance.UI_Initialized += UIInit;
         }
 
-
-        public IEnumerator CheckIfFileExists(string filePath, string fileName)
+        public void UIInit()
         {
-            if (!File.Exists($"{filePath}\\{fileName}"))
-            {
-                if (!Directory.Exists(filePath))
-                {
-                    MelonLogger.Msg($"Folder Not Found, Creating Folder: {filePath}");
-                    Directory.CreateDirectory(filePath);
-                }
-                if (!File.Exists($"{filePath}\\{fileName}"))
-                {
-                    MelonLogger.Msg($"Creating File {filePath}\\{fileName}");
-                    File.Create($"{filePath}\\{fileName}");
-                }
-                newFile = true;
-                for (int i = 0; i < 60; i++) { yield return new WaitForFixedUpdate(); }
-                string[] newFileText = new string[4];
-                newFileText[0] = "Show On Self:";
-                newFileText[1] = "False";
-                newFileText[2] = "Show on Others:";
-                newFileText[3] = "True";
-                File.WriteAllLines($"{filePath}\\{fileName}", newFileText);
-            }
-            yield return null;
+            UI.AddMod(HealthbarHider);
         }
 
+        public void Save()
+        {
+            hideSelf = (bool)HealthbarHider.Settings[1].Value;
+            hideOthers = (bool)HealthbarHider.Settings[2].Value;
+            localHealth.SetActive(!hideSelf);
+            hideEnemyHealths();
+        }
 
         public override void OnFixedUpdate()
         {
@@ -78,16 +70,14 @@ namespace HealthBarHider
                 healthTimerActive = false;
             }
             //if scene changed to acceptable scene
-            if ((!init) && (sceneChanged) && (currentScene != "") && (currentScene != "Loader"))
+            if ((!init) && (sceneChanged) && (currentScene != "Loader"))
             {
                 //initialize
                 try
                 {
                     //get variables
-                    playerManager = GameObject.Find("Game Instance/Initializable/PlayerManager").GetComponent<PlayerManager>();
+                    playerManager = PlayerManager.instance;
                     playerCount = 1;
-                    //read file
-                    readSettingsFile();
                     //if need to hide self
                     if (hideSelf)
                     {
@@ -129,48 +119,6 @@ namespace HealthBarHider
             init = false;
         }
 
-        //reads the file to see if it needs to hide self/other healths
-        private void readSettingsFile()
-        {
-            if (newFile)
-            {
-                hideSelf = true;
-                hideOthers = false;
-                newFile = false;
-                return;
-            }
-            try
-            {
-                //reads file lines
-                string[] fileContents = File.ReadAllLines(settingsFile);
-                //checks for hide self
-                if (fileContents[1].ToLower() == "true")
-                {
-                    hideSelf = true;
-                }
-                else
-                {
-                    hideSelf = false;
-                }
-                //checks for hide others
-                if (fileContents[3].ToLower() == "true")
-                {
-                    hideOthers = true;
-                }
-                else
-                {
-                    hideOthers = false;
-                }
-            }
-            catch (Exception e)
-            {
-                //error catch
-                MelonLogger.Error(e);
-                hideSelf = false;
-                hideOthers = false;
-            }
-        }
-
         //hides the enemy healths
         private void hideEnemyHealths()
         {
@@ -181,7 +129,7 @@ namespace HealthBarHider
                 if (tempPlayer.Controller != playerManager.localPlayer.Controller)
                 {
                     //hide health
-                    tempPlayer.Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.SetActive(false);
+                    tempPlayer.Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.SetActive(!hideOthers);
                 }
             }
         }
