@@ -4,31 +4,22 @@ using Il2CppRUMBLE.Players;
 using System;
 using UnityEngine;
 using RumbleModUI;
+using RumbleModdingAPI;
+using System.Collections;
 
 namespace HealthBarHider
 {
     public class HealthBarHiderClass : MelonMod
     {
         //variables
-        private PlayerManager playerManager;
-        private bool sceneChanged = false;
-        private string currentScene = "Loader";
-        private int playerCount = 1;
         private bool hideSelf = false;
         private bool hideOthers = false;
-        private DateTime EnemyHealthHideTimer;
-        private bool EnemyHealthHideTimerActive;
-        private DateTime healthTimer = DateTime.Now;
-        private bool healthTimerActive = false;
-        private GameObject localHealth;
-        private bool init = false;
-        UI UI = UI.instance;
         private Mod HealthbarHider = new Mod();
 
         public override void OnLateInitializeMelon()
         {
             HealthbarHider.ModName = "Health Bar Hider";
-            HealthbarHider.ModVersion = "2.0.1";
+            HealthbarHider.ModVersion = "2.1.1";
             HealthbarHider.SetFolder("HealthbarHider");
             HealthbarHider.AddDescription("Description", "Description", "Toggles Healthbars on Everyone", new Tags { IsSummary = true });
             HealthbarHider.AddToList("Hide Self", true, 0, "Turns On/Off Self Health", new Tags { });
@@ -38,100 +29,47 @@ namespace HealthBarHider
             hideOthers = (bool)HealthbarHider.Settings[2].Value;
             HealthbarHider.ModSaved += Save;
             UI.instance.UI_Initialized += UIInit;
+            Calls.onMapInitialized += mapInit;
+            Calls.onPlayerSpawned += playerSpawned;
         }
 
         public void UIInit()
         {
-            UI.AddMod(HealthbarHider);
+            UI.instance.AddMod(HealthbarHider);
         }
 
         public void Save()
         {
             hideSelf = (bool)HealthbarHider.Settings[1].Value;
             hideOthers = (bool)HealthbarHider.Settings[2].Value;
-            localHealth.SetActive(!hideSelf);
-            hideEnemyHealths();
+            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).GetChild(0).gameObject.SetActive(!hideSelf);
+            MelonCoroutines.Start(hideEnemyHealths());
         }
 
-        public override void OnFixedUpdate()
+        private void mapInit()
         {
-            //if enemy timer active and elapsed
-            if ((init) && (EnemyHealthHideTimerActive) && (EnemyHealthHideTimer <= DateTime.Now))
+            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).GetChild(0).gameObject.SetActive(!hideSelf);
+        }
+        
+        private void playerSpawned()
+        {
+            if (PlayerManager.instance.AllPlayers.Count > 1)
             {
-                EnemyHealthHideTimerActive = false;
-                hideEnemyHealths();
-            }
-            //if self timer active and elapsed
-            if ((init) && (healthTimerActive) && (healthTimer <= DateTime.Now))
-            {
-                localHealth = GameObject.Find("Health/Local/Player health bar");
-                //hide local health bar
-                localHealth.SetActive(false);
-                healthTimerActive = false;
-            }
-            //if scene changed to acceptable scene
-            if ((!init) && (sceneChanged) && (currentScene != "Loader"))
-            {
-                //initialize
-                try
-                {
-                    //get variables
-                    playerManager = PlayerManager.instance;
-                    playerCount = 1;
-                    //if need to hide self
-                    if (hideSelf)
-                    {
-                        //start timer
-                        healthTimer = DateTime.Now.AddSeconds(2f);
-                        healthTimerActive = true;
-                    }
-                    //if there's other players and need to hide others
-                    if ((hideOthers) && (playerCount != playerManager.AllPlayers.Count))
-                    {
-                        playerCount = playerManager.AllPlayers.Count;
-                        //hide remote healthbars
-                        hideEnemyHealths();
-                    }
-                    sceneChanged = false;
-                    init = true;
-                }
-                catch { }
-            }
-            //if not initializing and at the Park
-            else if (currentScene == "Park")
-            {
-                //listen for player count change
-                if ((hideOthers) && (playerCount != playerManager.AllPlayers.Count))
-                {
-                    playerCount = playerManager.AllPlayers.Count;
-                    //start timer
-                    EnemyHealthHideTimer = DateTime.Now.AddSeconds(2);
-                    EnemyHealthHideTimerActive = true;
-                }
+                MelonCoroutines.Start(hideEnemyHealths());
             }
         }
 
-        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        private IEnumerator hideEnemyHealths()
         {
-            //not messing with scene change stuff here to allow retrying initializing variables
-            sceneChanged = true;
-            currentScene = sceneName;
-            init = false;
-        }
-
-        //hides the enemy healths
-        private void hideEnemyHealths()
-        {
-            //for each player in all players
-            foreach (Player tempPlayer in playerManager.AllPlayers)
+            yield return new WaitForSeconds(1);
+            foreach (Player tempPlayer in PlayerManager.instance.AllPlayers)
             {
-                //if player isn't the local player
-                if (tempPlayer.Controller != playerManager.localPlayer.Controller)
+                if (tempPlayer.Controller != PlayerManager.instance.localPlayer.Controller)
                 {
-                    //hide health
-                    tempPlayer.Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.SetActive(!hideOthers);
+                    tempPlayer.Controller.gameObject.transform.GetChild(5).GetChild(0).GetChild(0).gameObject.SetActive(!hideOthers);
                 }
             }
+            yield break;
         }
     }
 }
