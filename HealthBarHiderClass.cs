@@ -19,7 +19,7 @@ namespace HealthBarHider
         public override void OnLateInitializeMelon()
         {
             HealthbarHider.ModName = "Health Bar Hider";
-            HealthbarHider.ModVersion = "2.1.1";
+            HealthbarHider.ModVersion = "2.2.0";
             HealthbarHider.SetFolder("HealthbarHider");
             HealthbarHider.AddDescription("Description", "Description", "Toggles Healthbars on Everyone", new Tags { IsSummary = true });
             HealthbarHider.AddToList("Hide Self", true, 0, "Turns On/Off Self Health", new Tags { });
@@ -42,13 +42,13 @@ namespace HealthBarHider
         {
             hideSelf = (bool)HealthbarHider.Settings[1].Value;
             hideOthers = (bool)HealthbarHider.Settings[2].Value;
-            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).GetChild(0).gameObject.SetActive(!hideSelf);
+            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).gameObject.SetActive(!hideSelf);
             MelonCoroutines.Start(hideEnemyHealths());
         }
 
         private void mapInit()
         {
-            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).GetChild(0).gameObject.SetActive(!hideSelf);
+            Calls.Players.GetLocalHealthbarGameObject().transform.GetChild(1).gameObject.SetActive(!hideSelf);
         }
         
         private void playerSpawned()
@@ -66,7 +66,7 @@ namespace HealthBarHider
             {
                 if (tempPlayer.Controller != PlayerManager.instance.localPlayer.Controller)
                 {
-                    tempPlayer.Controller.gameObject.transform.GetChild(5).GetChild(0).GetChild(0).gameObject.SetActive(!hideOthers);
+                    tempPlayer.Controller.gameObject.transform.GetChild(6).GetChild(1).gameObject.SetActive(!hideOthers);
                 }
             }
             yield break;
